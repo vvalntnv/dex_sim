@@ -24,4 +24,11 @@ pub mod dex {
     ) -> Result<()> {
         instructions::add_liquidity::add_liquidity_to_pool(ctx, token_a_amount, token_b_amount)
     }
+
+    pub fn withdraw_liquidity_from_pool(
+        ctx: Context<WithdrawLiquidityFromPool>,
+        lp_tokens_amount: u64,
+    ) -> Result<()> {
+        instructions::withdraw_liquidity::withdraw_liquidity_from_pool(ctx, lp_tokens_amount)
+    }
 }

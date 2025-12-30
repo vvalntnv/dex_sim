@@ -1,5 +1,7 @@
-use anchor_lang::{prelude::InterfaceAccount, Key};
+use anchor_lang::{prelude::*, Key};
 use anchor_spl::token_interface::Mint;
+
+use crate::constants::LIQUIDITY_POOL_SEED;
 
 pub fn i_sqrt(n: u128) -> u128 {
     if n < 2 {
@@ -30,4 +32,32 @@ pub fn _order_two_mint_accounts<'a, 'info>(
     } else {
         (mint_b, mint_a)
     }
+}
+
+pub fn get_pool_signer_seeds<'a>(
+    mint_a_key: &'a Pubkey,
+    mint_b_key: &'a Pubkey,
+    bump: &'a u8,
+) -> [&'a [u8]; 4] {
+    [
+        LIQUIDITY_POOL_SEED,
+        mint_a_key.as_ref(),
+        mint_b_key.as_ref(),
+        std::slice::from_ref(bump),
+    ]
+}
+
+pub fn calculate_withdrawal_amounts(
+    lp_tokens_to_burn: u64,
+    total_lp_supply: u64,
+    vault_a_amount: u64,
+    vault_b_amount: u64,
+) -> Result<(u64, u64)> {
+    let lp_tokens = lp_tokens_to_burn as u128;
+    let total_supply = total_lp_supply as u128;
+
+    let amount_a = (lp_tokens * vault_a_amount as u128) / total_supply;
+    let amount_b = (lp_tokens * vault_b_amount as u128) / total_supply;
+
+    Ok((amount_a as u64, amount_b as u64))
 }

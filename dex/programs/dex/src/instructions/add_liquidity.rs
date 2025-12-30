@@ -4,7 +4,7 @@ use anchor_spl::token::{mint_to, transfer, MintTo, Token, Transfer};
 use anchor_spl::token_interface::{Mint, TokenAccount};
 
 use crate::errors::DEXError;
-use crate::{constants::LIQUIDITY_POOL_SEED, state::Pool, utils::i_sqrt};
+use crate::{constants::LIQUIDITY_POOL_SEED, state::Pool, utils::{i_sqrt, get_pool_signer_seeds}};
 
 pub fn add_liquidity_to_pool(
     ctx: Context<AddLiquidityToPool>,
@@ -77,12 +77,12 @@ pub fn add_liquidity_to_pool(
     let mint_a_key = ctx.accounts.mint_a.key();
     let mint_b_key = ctx.accounts.mint_b.key();
 
-    let signer_seeds: &[&[&[u8]]] = &[&[
-        LIQUIDITY_POOL_SEED,
-        mint_a_key.as_ref(),
-        mint_b_key.as_ref(),
-        &[ctx.bumps.liquidity_pool],
-    ]];
+    let signer_seeds = get_pool_signer_seeds(
+        &mint_a_key,
+        &mint_b_key,
+        &ctx.bumps.liquidity_pool,
+    );
+    let signer_seeds_slice: &[&[&[u8]]] = &[&signer_seeds];
 
     transfer(
         CpiContext::new(
@@ -116,7 +116,7 @@ pub fn add_liquidity_to_pool(
                 to: ctx.accounts.user_lp_tokens_account.to_account_info(),
                 authority: ctx.accounts.liquidity_pool.to_account_info(),
             },
-            signer_seeds,
+            signer_seeds_slice,
         ),
         liquidity as u64,
     )?;

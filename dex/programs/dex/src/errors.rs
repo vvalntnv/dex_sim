@@ -12,5 +12,14 @@ pub enum DEXError {
     InvalidAmountOfLiquidation,
 
     #[msg("Invalid Mint Ordering. Swap the places of the mint")]
-    InvalidMintOrdering
+    InvalidMintOrdering,
+
+    #[msg("Insufficient LP tokens to withdraw")]
+    InsufficientLPTokens,
+
+    #[msg("Cannot withdraw from empty pool")]
+    EmptyPool,
+
+    #[msg("Withdrawal amount too small")]
+    WithdrawalTooSmall,
 }
