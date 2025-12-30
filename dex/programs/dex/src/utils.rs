@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, Key};
 use anchor_spl::token_interface::Mint;
 
-use crate::constants::LIQUIDITY_POOL_SEED;
+use crate::{constants::LIQUIDITY_POOL_SEED, errors::DEXError};
 
 pub fn i_sqrt(n: u128) -> u128 {
     if n < 2 {
@@ -56,8 +56,17 @@ pub fn calculate_withdrawal_amounts(
     let lp_tokens = lp_tokens_to_burn as u128;
     let total_supply = total_lp_supply as u128;
 
-    let amount_a = (lp_tokens * vault_a_amount as u128) / total_supply;
-    let amount_b = (lp_tokens * vault_b_amount as u128) / total_supply;
+    let amount_a = lp_tokens
+        .checked_mul(vault_a_amount as u128)
+        .ok_or(DEXError::MathOverflow)?
+        .checked_div(total_supply)
+        .ok_or(DEXError::MathOverflow)?;
+
+    let amount_b = lp_tokens
+        .checked_mul(vault_b_amount as u128)
+        .ok_or(DEXError::MathOverflow)?
+        .checked_div(total_supply)
+        .ok_or(DEXError::MathOverflow)?;
 
     Ok((amount_a as u64, amount_b as u64))
 }
