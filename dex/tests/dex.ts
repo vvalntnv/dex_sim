@@ -43,6 +43,10 @@ describe("dex", () => {
       6
     );
 
+    if (mintA.toBuffer().compare(mintB.toBuffer()) > 0) {
+      [mintA, mintB] = [mintB, mintA];
+    }
+
     // 2. Generate LP Mint Keypair (it will be initialized by the program)
     lpMintKeypair = anchor.web3.Keypair.generate();
 

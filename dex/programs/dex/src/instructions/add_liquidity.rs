@@ -142,18 +142,21 @@ pub struct AddLiquidityToPool<'info> {
     pub liquidity_pool: Account<'info, Pool>,
 
     #[account(
+        mut,
         associated_token::mint = mint_a,
         associated_token::authority = liquidity_pool
     )]
     pub vault_a: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
+        mut,
         associated_token::mint = mint_b,
         associated_token::authority = liquidity_pool
     )]
     pub vault_b: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
+        mut,
         mint::authority = liquidity_pool,
     )]
     pub lp_mint: InterfaceAccount<'info, Mint>,
@@ -167,12 +170,14 @@ pub struct AddLiquidityToPool<'info> {
     pub user_lp_tokens_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
+        mut,
         associated_token::mint = mint_a,
         associated_token::authority = signer
     )]
     pub user_token_a_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
+        mut,
         associated_token::mint = mint_b,
         associated_token::authority = signer
     )]
