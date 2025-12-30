@@ -6,3 +6,6 @@ pub use add_liquidity::*;
 
 pub mod withdraw_liquidity;
 pub use withdraw_liquidity::*;
+
+pub mod exchange_tokens;
+pub use exchange_tokens::*;

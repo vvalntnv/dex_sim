@@ -4,7 +4,11 @@ use anchor_spl::token::{mint_to, transfer, MintTo, Token, Transfer};
 use anchor_spl::token_interface::{Mint, TokenAccount};
 
 use crate::errors::DEXError;
-use crate::{constants::LIQUIDITY_POOL_SEED, state::Pool, utils::{i_sqrt, get_pool_signer_seeds}};
+use crate::{
+    constants::LIQUIDITY_POOL_SEED,
+    state::Pool,
+    utils::{get_pool_signer_seeds, i_sqrt},
+};
 
 pub fn add_liquidity_to_pool(
     ctx: Context<AddLiquidityToPool>,
@@ -77,11 +81,7 @@ pub fn add_liquidity_to_pool(
     let mint_a_key = ctx.accounts.mint_a.key();
     let mint_b_key = ctx.accounts.mint_b.key();
 
-    let signer_seeds = get_pool_signer_seeds(
-        &mint_a_key,
-        &mint_b_key,
-        &ctx.bumps.liquidity_pool,
-    );
+    let signer_seeds = get_pool_signer_seeds(&mint_a_key, &mint_b_key, &ctx.bumps.liquidity_pool);
     let signer_seeds_slice: &[&[&[u8]]] = &[&signer_seeds];
 
     transfer(
@@ -137,7 +137,11 @@ pub struct AddLiquidityToPool<'info> {
 
     #[account(
         seeds = [LIQUIDITY_POOL_SEED, mint_a.key().as_ref(), mint_b.key().as_ref()],
-        bump
+        bump,
+        has_one = vault_a,
+        has_one = vault_b,
+        has_one = mint_a,
+        has_one = mint_b
     )]
     pub liquidity_pool: Account<'info, Pool>,
 

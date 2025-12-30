@@ -22,4 +22,10 @@ pub enum DEXError {
 
     #[msg("Withdrawal amount too small")]
     WithdrawalTooSmall,
+
+    #[msg("Cannot exchange the same tokens")]
+    SameTokensExchanged,
+
+    #[msg("The wrong vault has been specified")]
+    WrongVaultSpecified,
 }

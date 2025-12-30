@@ -91,7 +91,11 @@ pub struct WithdrawLiquidityFromPool<'info> {
 
     #[account(
         seeds = [LIQUIDITY_POOL_SEED, mint_a.key().as_ref(), mint_b.key().as_ref()],
-        bump
+        bump,
+        has_one = vault_a,
+        has_one = vault_b,
+        has_one = mint_a,
+        has_one = mint_b
     )]
     pub liquidity_pool: Account<'info, Pool>,
 

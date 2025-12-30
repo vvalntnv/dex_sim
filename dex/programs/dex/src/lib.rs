@@ -31,4 +31,8 @@ pub mod dex {
     ) -> Result<()> {
         instructions::withdraw_liquidity::withdraw_liquidity_from_pool(ctx, lp_tokens_amount)
     }
+
+    pub fn exchange_tokens(ctx: Context<ExchangeTokens>, amount_to_exchange: u64) -> Result<()> {
+        instructions::exchange_tokens::exchange_tokens(ctx, amount_to_exchange)
+    }
 }
