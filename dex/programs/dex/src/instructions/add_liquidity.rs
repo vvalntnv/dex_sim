@@ -14,33 +14,37 @@ pub fn add_liquidity_to_pool(
     let total_lp_supply = ctx.accounts.lp_mint.supply;
     let total_a = ctx.accounts.vault_a.amount;
     let total_b = ctx.accounts.vault_b.amount;
+    let mut is_initial = true;
 
     let (a_amount, b_amount) = if total_lp_supply != 0 {
-        let token_a_128 = token_a_amount as u128;
-        let token_b_128 = token_b_amount as u128;
+        is_initial = false;
 
-        let proportional_b = token_a_128
+        let mut token_a_final_amount = token_a_amount as u128;
+        let mut token_b_final_amount = token_b_amount as u128;
+
+        let proportional_b = token_a_final_amount
             .checked_mul(total_b as u128)
             .ok_or(DEXError::MathOverflow)?
             .checked_div(total_a as u128)
             .ok_or(DEXError::MathOverflow)?;
 
-        if proportional_b < token_b_128 {
-            // we have to check if proportional_a is good
-            let proportional_a = token_b_128
+        if proportional_b < token_b_final_amount {
+            let proportional_a = token_b_final_amount
                 .checked_mul(total_a as u128)
                 .ok_or(DEXError::MathOverflow)?
                 .checked_div(total_b as u128)
                 .ok_or(DEXError::MathOverflow)?;
 
-            if proportional_a < token_a_128 {
+            if proportional_a < token_a_final_amount {
                 return err!(DEXError::InvalidAmountOfLiquidation);
             }
+
+            token_a_final_amount = proportional_a;
+        } else {
+            token_b_final_amount = proportional_b;
         }
 
-        // TODO: Finish this tomorrow
-
-        (0, 0)
+        (token_a_final_amount, token_b_final_amount)
     } else {
         // initial deposit does not require checking
         (token_a_amount as u128, token_b_amount as u128)
@@ -50,7 +54,26 @@ pub fn add_liquidity_to_pool(
         .checked_mul(b_amount)
         .ok_or(DEXError::MathOverflow)?;
 
-    let liquidity = i_sqrt(product);
+    // NOTE: Minimum liquidity sent to an unusable address (like the system's address)
+    // to prevent inflation attacks
+    let liquidity = if is_initial {
+        i_sqrt(product)
+    } else {
+        let a_anchored = a_amount
+            .checked_mul(total_lp_supply as u128)
+            .ok_or(DEXError::MathOverflow)?
+            .checked_div(ctx.accounts.vault_a.amount as u128)
+            .ok_or(DEXError::MathOverflow)?;
+
+        let b_anchored = b_amount
+            .checked_mul(total_lp_supply as u128)
+            .ok_or(DEXError::MathOverflow)?
+            .checked_div(ctx.accounts.vault_b.amount as u128)
+            .ok_or(DEXError::MathOverflow)?;
+
+        a_anchored.min(b_anchored)
+    };
+
     let mint_a_key = ctx.accounts.mint_a.key();
     let mint_b_key = ctx.accounts.mint_b.key();
 
@@ -70,7 +93,7 @@ pub fn add_liquidity_to_pool(
                 authority: ctx.accounts.signer.to_account_info(),
             },
         ),
-        token_a_amount,
+        a_amount as u64,
     )?;
 
     transfer(
@@ -82,7 +105,7 @@ pub fn add_liquidity_to_pool(
                 authority: ctx.accounts.signer.to_account_info(),
             },
         ),
-        token_b_amount,
+        b_amount as u64,
     )?;
 
     mint_to(
@@ -106,6 +129,9 @@ pub struct AddLiquidityToPool<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
+    #[account(
+        constraint = mint_a.key() < mint_b.key() @ DEXError::InvalidMintOrdering
+    )]
     pub mint_a: InterfaceAccount<'info, Mint>,
     pub mint_b: InterfaceAccount<'info, Mint>,
 

@@ -16,7 +16,12 @@ pub mod dex {
     pub fn initialize(ctx: Context<InitializeLiquidityPool>, initial_fee_bps: u64) -> Result<()> {
         instructions::init_liquidity_pool::initialize_liquidity_pool(ctx, initial_fee_bps)
     }
-}
 
-#[derive(Accounts)]
-pub struct Initialize {}
+    pub fn add_liquidity_to_pool(
+        ctx: Context<AddLiquidityToPool>,
+        token_a_amount: u64,
+        token_b_amount: u64,
+    ) -> Result<()> {
+        instructions::add_liquidity::add_liquidity_to_pool(ctx, token_a_amount, token_b_amount)
+    }
+}

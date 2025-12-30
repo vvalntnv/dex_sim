@@ -10,4 +10,7 @@ pub enum DEXError {
 
     #[msg("Invalid amount of liquidation deposited. Not enough tokens")]
     InvalidAmountOfLiquidation,
+
+    #[msg("Invalid Mint Ordering. Swap the places of the mint")]
+    InvalidMintOrdering
 }

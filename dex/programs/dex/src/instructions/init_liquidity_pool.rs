@@ -13,13 +13,18 @@ pub fn initialize_liquidity_pool(
     ctx: Context<InitializeLiquidityPool>,
     initial_fee_bps: u64,
 ) -> Result<()> {
-    // TODO: Make sure mint_a and mint_b LPs with changed places DO NOT exist
     require!(initial_fee_bps <= 10_000, DEXError::InvalidBPSValue);
 
     let liquidity_pool = &mut ctx.accounts.liquidity_pool;
 
-    liquidity_pool.vault_a = ctx.accounts.vault_a.key();
-    liquidity_pool.vault_b = ctx.accounts.vault_b.key();
+    let (vault_a, vault_b) = if ctx.accounts.mint_a.key() < ctx.accounts.mint_b.key() {
+        (&ctx.accounts.vault_a, &ctx.accounts.vault_b)
+    } else {
+        (&ctx.accounts.vault_b, &ctx.accounts.vault_a)
+    };
+
+    liquidity_pool.vault_a = vault_a.key();
+    liquidity_pool.vault_b = vault_b.key();
     liquidity_pool.lp_mint = ctx.accounts.lp_mint.key();
     liquidity_pool.fee_bps = initial_fee_bps;
 
@@ -38,7 +43,11 @@ pub struct InitializeLiquidityPool<'info> {
         init,
         payer = signer,
         space = Pool::MAX_SIZE,
-        seeds = [LIQUIDITY_POOL_SEED, mint_a.key().as_ref(), mint_b.key().as_ref()],
+        seeds = [
+            LIQUIDITY_POOL_SEED,
+            mint_a.key().min(mint_b.key()).as_ref(),
+            mint_b.key().max(mint_a.key()).as_ref()
+        ],
         bump
     )]
     pub liquidity_pool: Account<'info, Pool>,

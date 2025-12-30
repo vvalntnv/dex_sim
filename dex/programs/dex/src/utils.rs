@@ -1,3 +1,6 @@
+use anchor_lang::{prelude::InterfaceAccount, Key};
+use anchor_spl::token_interface::Mint;
+
 pub fn i_sqrt(n: u128) -> u128 {
     if n < 2 {
         return n;
@@ -13,5 +16,18 @@ pub fn i_sqrt(n: u128) -> u128 {
             return x;
         }
         x = y;
+    }
+}
+
+type _MintAccount<'info> = InterfaceAccount<'info, Mint>;
+
+pub fn _order_two_mint_accounts<'a, 'info>(
+    mint_a: &'a _MintAccount<'info>,
+    mint_b: &'a _MintAccount<'info>,
+) -> (&'a _MintAccount<'info>, &'a _MintAccount<'info>) {
+    if mint_a.key() < mint_b.key() {
+        (mint_a, mint_b)
+    } else {
+        (mint_b, mint_a)
     }
 }
