@@ -6,7 +6,11 @@ use anchor_spl::{
 
 use crate::{errors::DEXError, state::Pool, utils::get_pool_signer_seeds};
 
-pub fn exchange_tokens(ctx: Context<ExchangeTokens>, amount_to_exchange: u64) -> Result<()> {
+pub fn exchange_tokens(
+    ctx: Context<ExchangeTokens>,
+    amount_to_exchange: u64,
+    min_receive_amount: u64,
+) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let vault_from = &ctx.accounts.vault_from;
     let vault_to = &ctx.accounts.vault_to;
@@ -15,19 +19,54 @@ pub fn exchange_tokens(ctx: Context<ExchangeTokens>, amount_to_exchange: u64) ->
     let pool = &ctx.accounts.liquidity_pool;
     let token_program = &ctx.accounts.token_program;
 
-    let price_constant = (vault_from.amount as u128)
-        .checked_mul(vault_to.amount as u128)
+    // Fee is taken from the input amount (amount_to_exchange)
+    let fee_amount = (amount_to_exchange as u128)
+        .checked_mul(pool.fee_bps as u128)
+        .unwrap()
+        .checked_div(10000)
+        .unwrap();
+
+    let amount_in_net = (amount_to_exchange as u128)
+        .checked_sub(fee_amount)
         .ok_or(DEXError::MathOverflow)?;
 
-    let new_vault_to_amount = (amount_to_exchange as u128)
-        .checked_add(vault_to.amount as u128)
+    let reserve_in = vault_to.amount as u128;
+    let reserve_out = vault_from.amount as u128;
+
+    //                          reserve_out * amount_in_net
+    // Formula is: delta_out = ------------------------------
+    //                          reserve_in + amount_in_net
+    //
+    // The formula is derived from xy = k -> (x + delta_x)(y - delta_y) = xy
+
+    let numerator = amount_in_net
+        .checked_mul(reserve_out)
         .ok_or(DEXError::MathOverflow)?;
 
-    let new_vault_from_amount = price_constant
-        .checked_div(new_vault_to_amount)
+    let denominator = reserve_in
+        .checked_add(amount_in_net)
+        .ok_or(DEXError::MathOverflow)?;
+
+    let tokens_to_give = numerator
+        .checked_div(denominator)
         .ok_or(DEXError::MathOverflow)? as u64;
 
-    let tokens_to_give = vault_from.amount - new_vault_from_amount;
+    require!(
+        tokens_to_give >= min_receive_amount,
+        DEXError::SlippageExceeded
+    );
+
+    transfer(
+        CpiContext::new(
+            token_program.to_account_info(),
+            Transfer {
+                from: user_token_account_from.to_account_info(),
+                to: vault_to.to_account_info(),
+                authority: buyer.to_account_info(),
+            },
+        ),
+        amount_to_exchange, // Send full amount (fee is implicit in the reduced output)
+    )?;
 
     let signer_seeds = get_pool_signer_seeds(&pool.mint_a, &pool.mint_b, &pool.bump);
     let signer_seeds: &[&[&[u8]]] = &[&signer_seeds];
@@ -41,18 +80,6 @@ pub fn exchange_tokens(ctx: Context<ExchangeTokens>, amount_to_exchange: u64) ->
                 authority: pool.to_account_info(),
             },
             &signer_seeds,
-        ),
-        amount_to_exchange,
-    )?;
-
-    transfer(
-        CpiContext::new(
-            token_program.to_account_info(),
-            Transfer {
-                from: user_token_account_from.to_account_info(),
-                to: vault_to.to_account_info(),
-                authority: buyer.to_account_info(),
-            },
         ),
         tokens_to_give,
     )?;

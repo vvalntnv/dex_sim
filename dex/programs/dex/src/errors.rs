@@ -28,4 +28,7 @@ pub enum DEXError {
 
     #[msg("The wrong vault has been specified")]
     WrongVaultSpecified,
+
+    #[msg("Slippage exceeded")]
+    SlippageExceeded,
 }
