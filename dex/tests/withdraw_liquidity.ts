@@ -41,14 +41,14 @@ describe("withdraw_liquidity", () => {
       payer,
       provider.wallet.publicKey,
       null,
-      6
+      6,
     );
     mintB = await createMint(
       provider.connection,
       payer,
       provider.wallet.publicKey,
       null,
-      6
+      6,
     );
 
     // Ensure mintA < mintB for deterministic ordering required by the program
@@ -62,7 +62,7 @@ describe("withdraw_liquidity", () => {
     // 3. Derive Liquidity Pool PDA
     [liquidityPoolPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("pool"), mintA.toBuffer(), mintB.toBuffer()],
-      program.programId
+      program.programId,
     );
 
     // 4. Derive Vault ATAs
@@ -84,11 +84,11 @@ describe("withdraw_liquidity", () => {
     // 6. Setup User Accounts and Mint Tokens
     userTokenA = await getAssociatedTokenAddress(
       mintA,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     userTokenB = await getAssociatedTokenAddress(
       mintB,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     // Create ATAs
@@ -96,13 +96,13 @@ describe("withdraw_liquidity", () => {
       provider.connection,
       payer,
       mintA,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     await getOrCreateAssociatedTokenAccount(
       provider.connection,
       payer,
       mintB,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     // Mint tokens to user (enough for all tests)
@@ -112,7 +112,7 @@ describe("withdraw_liquidity", () => {
       mintA,
       userTokenA,
       provider.wallet.publicKey,
-      10_000_000_000
+      10_000_000_000,
     );
     await mintTo(
       provider.connection,
@@ -120,13 +120,13 @@ describe("withdraw_liquidity", () => {
       mintB,
       userTokenB,
       provider.wallet.publicKey,
-      10_000_000_000
+      10_000_000_000,
     );
 
     // User LP Token Account
     userLpToken = await getAssociatedTokenAddress(
       lpMintKeypair.publicKey,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     // Add initial liquidity for tests
@@ -147,7 +147,7 @@ describe("withdraw_liquidity", () => {
   it("Withdraws partial liquidity successfully", async () => {
     const userLpAccountBefore = await getAccount(
       provider.connection,
-      userLpToken
+      userLpToken,
     );
     const vaultABefore = await getAccount(provider.connection, vaultA);
     const vaultBBefore = await getAccount(provider.connection, vaultB);
@@ -155,9 +155,7 @@ describe("withdraw_liquidity", () => {
     const userTokenBBefore = await getAccount(provider.connection, userTokenB);
 
     // Withdraw 50% of LP tokens
-    const lpToWithdraw = new anchor.BN(
-      Number(userLpAccountBefore.amount) / 2
-    );
+    const lpToWithdraw = new anchor.BN(Number(userLpAccountBefore.amount) / 2);
 
     await program.methods
       .withdrawLiquidityFromPool(lpToWithdraw)
@@ -170,10 +168,16 @@ describe("withdraw_liquidity", () => {
       .rpc();
 
     // Verify LP tokens were burned
-    const userLpAccountAfter = await getAccount(provider.connection, userLpToken);
+    const userLpAccountAfter = await getAccount(
+      provider.connection,
+      userLpToken,
+    );
     assert.equal(
       userLpAccountAfter.amount.toString(),
-      (BigInt(userLpAccountBefore.amount.toString()) - BigInt(lpToWithdraw.toString())).toString()
+      (
+        BigInt(userLpAccountBefore.amount.toString()) -
+        BigInt(lpToWithdraw.toString())
+      ).toString(),
     );
 
     // Verify user received tokens
@@ -182,11 +186,11 @@ describe("withdraw_liquidity", () => {
 
     assert.isAbove(
       Number(userTokenAAfter.amount),
-      Number(userTokenABefore.amount)
+      Number(userTokenABefore.amount),
     );
     assert.isAbove(
       Number(userTokenBAfter.amount),
-      Number(userTokenBBefore.amount)
+      Number(userTokenBBefore.amount),
     );
 
     // Verify vaults decreased
@@ -200,7 +204,7 @@ describe("withdraw_liquidity", () => {
   it("Withdraws all remaining liquidity", async () => {
     const userLpAccountBefore = await getAccount(
       provider.connection,
-      userLpToken
+      userLpToken,
     );
 
     // Withdraw all remaining LP tokens
@@ -217,7 +221,10 @@ describe("withdraw_liquidity", () => {
       .rpc();
 
     // Verify LP balance is 0
-    const userLpAccountAfter = await getAccount(provider.connection, userLpToken);
+    const userLpAccountAfter = await getAccount(
+      provider.connection,
+      userLpToken,
+    );
     assert.equal(userLpAccountAfter.amount.toString(), "0");
 
     // Verify vaults are (nearly) empty
@@ -237,7 +244,7 @@ describe("withdraw_liquidity", () => {
     // Airdrop SOL to user2
     const airdropSig = await provider.connection.requestAirdrop(
       user2.publicKey,
-      2 * anchor.web3.LAMPORTS_PER_SOL
+      2 * anchor.web3.LAMPORTS_PER_SOL,
     );
     await provider.connection.confirmTransaction(airdropSig);
 
@@ -246,19 +253,19 @@ describe("withdraw_liquidity", () => {
       provider.connection,
       payer,
       mintA,
-      user2.publicKey
+      user2.publicKey,
     );
     const user2TokenB = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       payer,
       mintB,
-      user2.publicKey
+      user2.publicKey,
     );
     const user2LpToken = await getOrCreateAssociatedTokenAccount(
       provider.connection,
       payer,
       lpMintKeypair.publicKey,
-      user2.publicKey
+      user2.publicKey,
     );
 
     // Mint tokens to user2
@@ -268,7 +275,7 @@ describe("withdraw_liquidity", () => {
       mintA,
       user2TokenA.address,
       provider.wallet.publicKey,
-      5_000_000_000
+      5_000_000_000,
     );
     await mintTo(
       provider.connection,
@@ -276,7 +283,7 @@ describe("withdraw_liquidity", () => {
       mintB,
       user2TokenB.address,
       provider.wallet.publicKey,
-      5_000_000_000
+      5_000_000_000,
     );
 
     // Add liquidity from both users
@@ -313,7 +320,7 @@ describe("withdraw_liquidity", () => {
     const user1LpBefore = await getAccount(provider.connection, userLpToken);
     const user2LpBefore = await getAccount(
       provider.connection,
-      user2LpToken.address
+      user2LpToken.address,
     );
 
     const user1Withdraw = new anchor.BN(Number(user1LpBefore.amount) / 2);
@@ -349,16 +356,22 @@ describe("withdraw_liquidity", () => {
     const user1LpAfter = await getAccount(provider.connection, userLpToken);
     const user2LpAfter = await getAccount(
       provider.connection,
-      user2LpToken.address
+      user2LpToken.address,
     );
 
     assert.equal(
       user1LpAfter.amount.toString(),
-      (BigInt(user1LpBefore.amount.toString()) - BigInt(user1Withdraw.toString())).toString()
+      (
+        BigInt(user1LpBefore.amount.toString()) -
+        BigInt(user1Withdraw.toString())
+      ).toString(),
     );
     assert.equal(
       user2LpAfter.amount.toString(),
-      (BigInt(user2LpBefore.amount.toString()) - BigInt(user2Withdraw.toString())).toString()
+      (
+        BigInt(user2LpBefore.amount.toString()) -
+        BigInt(user2Withdraw.toString())
+      ).toString(),
     );
   });
 
@@ -384,9 +397,7 @@ describe("withdraw_liquidity", () => {
 
   it("Fails when withdrawing more LP tokens than owned", async () => {
     const userLpAccount = await getAccount(provider.connection, userLpToken);
-    const tooMuch = new anchor.BN(
-      Number(userLpAccount.amount) * 2 + 1000000
-    );
+    const tooMuch = new anchor.BN(Number(userLpAccount.amount) * 2 + 1000000);
 
     try {
       await program.methods
@@ -401,7 +412,9 @@ describe("withdraw_liquidity", () => {
       assert.fail("Should have failed with insufficient tokens");
     } catch (err) {
       // This will fail at the token program level with insufficient funds
-      assert.isTrue(err.toString().includes("Error") || err.toString().includes("0x1"));
+      assert.isTrue(
+        err.toString().includes("Error") || err.toString().includes("0x1"),
+      );
     }
   });
 

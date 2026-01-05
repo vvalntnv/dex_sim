@@ -31,7 +31,7 @@ export abstract class Bot {
   protected async swap(
     amount: number,
     mintFrom: PublicKey,
-    mintTo: PublicKey
+    mintTo: PublicKey,
   ): Promise<string> {
     // TODO: Implement swap logic using this.program.methods.exchangeTokens
     return "";

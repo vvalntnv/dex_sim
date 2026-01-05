@@ -41,14 +41,14 @@ describe("add_liquidity", () => {
       payer,
       provider.wallet.publicKey,
       null,
-      6
+      6,
     );
     mintB = await createMint(
       provider.connection,
       payer,
       provider.wallet.publicKey,
       null,
-      6
+      6,
     );
 
     // Ensure mintA < mintB for deterministic ordering required by the program
@@ -62,7 +62,7 @@ describe("add_liquidity", () => {
     // 3. Derive Liquidity Pool PDA
     [liquidityPoolPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("pool"), mintA.toBuffer(), mintB.toBuffer()],
-      program.programId
+      program.programId,
     );
 
     // 4. Derive Vault ATAs
@@ -84,11 +84,11 @@ describe("add_liquidity", () => {
     // 6. Setup User Accounts and Mint Tokens
     userTokenA = await getAssociatedTokenAddress(
       mintA,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     userTokenB = await getAssociatedTokenAddress(
       mintB,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     // Create ATAs
@@ -96,13 +96,13 @@ describe("add_liquidity", () => {
       provider.connection,
       payer,
       mintA,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
     await getOrCreateAssociatedTokenAccount(
       provider.connection,
       payer,
       mintB,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
 
     // Mint tokens to user (enough for initial + subsequent tests)
@@ -112,7 +112,7 @@ describe("add_liquidity", () => {
       mintA,
       userTokenA,
       provider.wallet.publicKey,
-      10_000_000_000
+      10_000_000_000,
     );
     await mintTo(
       provider.connection,
@@ -120,13 +120,13 @@ describe("add_liquidity", () => {
       mintB,
       userTokenB,
       provider.wallet.publicKey,
-      10_000_000_000
+      10_000_000_000,
     );
 
     // User LP Token Account
     userLpToken = await getAssociatedTokenAddress(
       lpMintKeypair.publicKey,
-      provider.wallet.publicKey
+      provider.wallet.publicKey,
     );
   });
 
@@ -177,11 +177,11 @@ describe("add_liquidity", () => {
     // Total A = 1500, Total B = 3000
     assert.equal(
       vaultAAccount.amount.toString(),
-      (INITIAL_A_AMOUNT + 500_000_000).toString()
+      (INITIAL_A_AMOUNT + 500_000_000).toString(),
     );
     assert.equal(
       vaultBAccount.amount.toString(),
-      (INITIAL_B_AMOUNT + 1000_000_000).toString()
+      (INITIAL_B_AMOUNT + 1000_000_000).toString(),
     );
   });
 

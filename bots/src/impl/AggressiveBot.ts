@@ -1,7 +1,6 @@
 import { Bot } from "../abstract/Bot";
 
 export class AggressiveBot extends Bot {
-  
   async onTick(): Promise<void> {
     // TODO: Implement aggressive trading strategy
     // e.g., Randomly make large swaps, ignore small price movements

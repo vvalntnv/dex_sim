@@ -1,7 +1,6 @@
 import { Bot } from "../abstract/Bot";
 
 export class ParanoidBot extends Bot {
-  
   async onTick(): Promise<void> {
     // TODO: Implement paranoid trading strategy
     // e.g., Check volatility, if high, exit to stablecoins

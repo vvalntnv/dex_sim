@@ -1,8 +1,8 @@
 export interface NewsEvent {
   headline: string;
   sentiment: number; // -1.0 (Catastrophic) to 1.0 (Euphoric)
-  impact: number;    // 0.0 to 1.0 (Importance)
-  category: 'SECURITY' | 'MACRO' | 'TECH' | 'COMMUNITY';
+  impact: number; // 0.0 to 1.0 (Importance)
+  category: "SECURITY" | "MACRO" | "TECH" | "COMMUNITY";
 }
 
 export class NewsOracle {
@@ -19,8 +19,10 @@ export class NewsOracle {
    * Broadcast a news event to all subscribers
    */
   public broadcast(news: NewsEvent): void {
-    console.log(`[NEWS] ${news.category}: ${news.headline} (Sentiment: ${news.sentiment})`);
-    this.subscribers.forEach(sub => sub(news));
+    console.log(
+      `[NEWS] ${news.category}: ${news.headline} (Sentiment: ${news.sentiment})`,
+    );
+    this.subscribers.forEach((sub) => sub(news));
   }
 
   /**
@@ -29,10 +31,10 @@ export class NewsOracle {
   public generateRandomNews(): NewsEvent {
     // TODO: Implement random news generation logic
     return {
-        headline: "Placeholder News",
-        sentiment: 0,
-        impact: 0,
-        category: "MACRO"
+      headline: "Placeholder News",
+      sentiment: 0,
+      impact: 0,
+      category: "MACRO",
     };
   }
 }

@@ -32,7 +32,7 @@ describe("dex", () => {
       payer,
       provider.wallet.publicKey,
       null,
-      6
+      6,
     );
 
     mintB = await createMint(
@@ -40,7 +40,7 @@ describe("dex", () => {
       payer,
       provider.wallet.publicKey,
       null,
-      6
+      6,
     );
 
     if (mintA.toBuffer().compare(mintB.toBuffer()) > 0) {
@@ -55,7 +55,7 @@ describe("dex", () => {
     // LIQUIDITY_POOL_SEED = "pool" (from constants.rs)
     [liquidityPoolPda] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("pool"), mintA.toBuffer(), mintB.toBuffer()],
-      program.programId
+      program.programId,
     );
 
     // 4. Derive Vault ATAs
@@ -63,7 +63,7 @@ describe("dex", () => {
     vaultA = await getAssociatedTokenAddress(
       mintA,
       liquidityPoolPda,
-      true // allowOwnerOffCurve: true because owner is a PDA
+      true, // allowOwnerOffCurve: true because owner is a PDA
     );
 
     vaultB = await getAssociatedTokenAddress(mintB, liquidityPoolPda, true);
@@ -113,7 +113,7 @@ describe("dex", () => {
     assert.ok(poolAccount.vaultB.equals(vaultB), "Vault B should match");
     assert.ok(
       poolAccount.lpMint.equals(lpMintKeypair.publicKey),
-      "LP Mint should match"
+      "LP Mint should match",
     );
     assert.ok(poolAccount.feeBps.eq(FEE_BPS), "Fee BPS should match");
 
